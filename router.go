@@ -8,25 +8,72 @@ import (
 	"github.com/autom8ter/util/netutil"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/spf13/afero"
 	"github.com/urfave/negroni"
 	"net/http"
 )
 
+func init() {
+	fs = afero.NewOsFs()
+}
+
+var fs afero.Fs
+
 type Router struct {
+	fs     *afero.HttpFs
 	addr   string
 	router *mux.Router
 	chain  *negroni.Negroni
+	db     *MongoDB
+}
+
+func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+	r.router.ServeHTTP(rw, req)
 }
 
 func NewRouter(addr string) *Router {
 	m := mux.NewRouter()
 	n := negroni.Classic()
+	httpFs := afero.NewHttpFs(fs)
 	return &Router{
+		fs:     httpFs,
 		addr:   addr,
 		router: m,
+		db:     nil,
 		chain:  n,
 	}
 }
+
+func NewMongoRouter(addr, colName, connectionStr, databaseName string) *Router {
+	return &Router{
+		addr:   addr,
+		router: mux.NewRouter(),
+		chain:  negroni.Classic(),
+		db:     NewMongoDB(colName, connectionStr, databaseName),
+	}
+}
+
+func (r *Router) Mongo() *MongoDB {
+	if r.db == nil {
+		panic("Database uninitialized, us NewMongoRouter to add a database connection")
+	}
+	return r.db
+}
+
+func (r *Router) SwitchMongo(m *MongoDB) {
+	r.db = m
+}
+
+func (r *Router) SwitchNegroni(n *negroni.Negroni) {
+	r.chain = n
+}
+func (r *Router) SwitchAddr(a string) {
+	r.addr = a
+}
+func (r *Router) SwitchRouter(router *mux.Router) {
+	r.router = router
+}
+
 func (r *Router) WithDebug() {
 	netutil.WithDebug(r.router)
 }
@@ -156,4 +203,18 @@ func (r *Router) NewSessionCookieStore() *sessions.CookieStore {
 
 func (r *Router) AddFlashSessionFunc(cookieStore *sessions.CookieStore, name string, val interface{}, vars ...string) http.HandlerFunc {
 	return netutil.AddFlashSessionFunc(cookieStore, name, val, vars...)
+}
+
+func (r *Router) Mux() *mux.Router {
+	if r.router == nil {
+		return mux.NewRouter()
+	}
+	return r.router
+}
+
+func (r *Router) HTTPFS() *afero.HttpFs {
+	if r.fs == nil {
+		return afero.NewHttpFs(fs)
+	}
+	return r.fs
 }

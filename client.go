@@ -3,6 +3,7 @@ package gonet
 import (
 	"encoding/base64"
 	"github.com/autom8ter/util"
+	"github.com/autom8ter/util/fsutil"
 	"github.com/autom8ter/util/netutil"
 	"github.com/gorilla/sessions"
 	"github.com/spf13/cobra"
@@ -122,7 +123,7 @@ func (c *Client) Init(cfgFile string, envPrefix string, headers map[string]strin
 	c.root.PersistentFlags().StringVarP(&cfgFile, "config", "c", "config.yaml", "relative path to config file")
 	c.root.PersistentFlags().StringToStringVar(&headers, "headers", nil, "request headers")
 	if viper.ConfigFileUsed() == "" {
-		util.InitConfig(cfgFile, envPrefix)
+		fsutil.InitConfig(cfgFile, envPrefix)
 	}
 	viper.BindPFlags(c.root.PersistentFlags())
 	viper.BindPFlags(c.root.Flags())

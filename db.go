@@ -56,6 +56,14 @@ func NewMongoDB(collName, connectionStr, database string) *MongoDB {
 	}
 }
 
+func (m *MongoDB) SwitchCollection(name string) {
+	m.collection = name
+}
+
+func (m *MongoDB) SwitchConnection(connection *bongo.Connection) {
+	m.conn = connection
+}
+
 func (m *MongoDB) Config() *bongo.Config {
 	return m.conn.Config
 }
@@ -96,20 +104,16 @@ func (m *MongoDB) DeleteDoc(query bson.M) (*mgo.ChangeInfo, error) {
 	return m.conn.Collection(m.collection).Delete(query)
 }
 
-func (m *MongoDB) FindOne(query interface{}, doc interface{}) error {
+func (m *MongoDB) FindDoc(query interface{}, doc interface{}) error {
 	return m.conn.Collection(m.collection).FindOne(query, doc)
 }
 
-func (m *MongoDB) FindById(id bson.ObjectId, doc interface{}) error {
+func (m *MongoDB) FindByDocId(id bson.ObjectId, doc interface{}) error {
 	return m.conn.Collection(m.collection).FindById(id, doc)
 }
 
-func (m *MongoDB) Find(query interface{}) *bongo.ResultSet {
+func (m *MongoDB) Query(query interface{}) *bongo.ResultSet {
 	return m.conn.Collection(m.collection).Find(query)
-}
-
-func (m *MongoDB) DeleteOne(query bson.M) error {
-	return m.conn.Collection(m.collection).DeleteOne(query)
 }
 
 func (m *MongoDB) DeleteDocument(doc bongo.Document) error {
