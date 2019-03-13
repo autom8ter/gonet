@@ -37,7 +37,7 @@ import (
 
 type MongoDB struct {
 	collection string
-	conn *bongo.Connection
+	conn       *bongo.Connection
 }
 
 func NewMongoDB(collName, connectionStr, database string) *MongoDB {
@@ -52,7 +52,7 @@ func NewMongoDB(collName, connectionStr, database string) *MongoDB {
 	}
 	return &MongoDB{
 		collection: collName,
-		conn: connection,
+		conn:       connection,
 	}
 }
 

@@ -26,3 +26,9 @@ var Auth0UserHTML = `<html>
         </div>
     </body>
 </html>`
+
+var GoogleLoginButton = `<html>
+<body>
+	<a href="/login">Google Log In</a>
+</body>
+</html>`
