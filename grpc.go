@@ -1,6 +1,7 @@
 package gonet
 
 import (
+	"fmt"
 	"github.com/autom8ter/gonet/config"
 	"github.com/gorilla/handlers"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -43,6 +44,8 @@ func NewGrpcGateway(ctx context.Context, cfg *GrpcGatewayConfig, r *Router) *Grp
 	if err := cfg.RegisterFunc(ctx, gw, c.Endpoint, cfg.DialOptions); err != nil {
 		logrus.Fatalf("failed to register grpc gateway from endpoint: %s", err.Error())
 	}
+	fmt.Printf("registered grpc endpoint:  %s\n", c.Endpoint)
+	fmt.Printf("registered gateway handler:  %s\n", c.ApiPrefix)
 	r.Mux().Handle(c.ApiPrefix, handlers.CustomLoggingHandler(os.Stdout, http.StripPrefix(c.ApiPrefix[:len(c.ApiPrefix)-1], config.AllowCors(c, gw)), config.LogFormatter(c)))
 
 	return &GrpcGateway{

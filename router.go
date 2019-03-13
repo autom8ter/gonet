@@ -3,7 +3,6 @@ package gonet
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"github.com/autom8ter/gonet/db"
 	"github.com/autom8ter/util"
 	"github.com/autom8ter/util/netutil"
@@ -112,7 +111,6 @@ func (r *Router) WithJWT(signingKey string, debug bool, path string, handler htt
 }
 
 func (r *Router) Serve() {
-	fmt.Printf("starting http server on: %s\n", r.addr)
 	r.chain.UseHandler(r.router)
 	r.chain.Run(r.addr)
 }

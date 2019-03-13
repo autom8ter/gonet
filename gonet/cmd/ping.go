@@ -15,40 +15,51 @@
 package cmd
 
 import (
-	"context"
-	"github.com/autom8ter/gonet"
-	"github.com/autom8ter/gonet/config"
-	"github.com/autom8ter/gonet/testing/gen/echo"
+	"fmt"
+	"github.com/autom8ter/util/netutil"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"log"
+	"net"
+	"time"
 )
 
-var grpcGatewayConfig = &gonet.GrpcGatewayConfig{
-	EnvPrefix:    "",
-	DialOptions:  []grpc.DialOption{grpc.WithInsecure()},
-	RegisterFunc: echopb.RegisterEchoServiceHandlerFromEndpoint,
-}
-
-// grpcCmd represents the grpc command
-var grpcCmd = &cobra.Command{
-	Use:   "grpc",
+// pingCmd represents the ping command
+var pingCmd = &cobra.Command{
+	Use:   "ping",
 	Short: "A brief description of your command",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		go func() {
-			if err := echopb.NewEchoServer().Serve(grpc.NewServer()); err != nil {
-				log.Fatal(err.Error())
-			}
-		}()
-		config.SetupViper("")
+		p := netutil.Pinger{
+			Endpoint: "localhost:3000",
+			Do: func() error {
+				conn, err := net.DialTimeout("tcp", addr, 1*time.Second)
+				if err != nil {
+					return err
+				}
+				return conn.Close()
+			},
+		}
+		if err := p.Once().Do(); err != nil {
+			fmt.Println(err.Error())
+		}
+		fmt.Println("ping grpc: success!")
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		gw := gonet.NewGrpcGateway(context.Background(), grpcGatewayConfig, gonet.NewRouter(addr))
-		gw.WithDebug()
-		gw.Serve()
+		p := netutil.Pinger{
+			Endpoint: "localhost:8080",
+			Do: func() error {
+				conn, err := net.DialTimeout("tcp", addr, 1*time.Second)
+				if err != nil {
+					return err
+				}
+				return conn.Close()
+			},
+		}
+		if err := p.Once().Do(); err != nil {
+			fmt.Println(err.Error())
+		}
+		fmt.Println("ping gateway: success!")
 	},
 }
 
 func init() {
-	grpcCmd.LocalFlags().StringVar(&addr, "address", ":8080", "address to listen on")
+	rootCmd.AddCommand(pingCmd)
 }

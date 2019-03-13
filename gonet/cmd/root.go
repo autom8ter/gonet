@@ -22,6 +22,13 @@ import (
 )
 
 var cfgFile string
+var addr string
+var headers map[string]string
+var formVals map[string]string
+var user string
+var password string
+var uRL string
+var method string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{

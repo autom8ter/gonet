@@ -14,7 +14,9 @@
 
 package main
 
-import "github.com/autom8ter/gonet/gonet/cmd"
+import (
+	"github.com/autom8ter/gonet/gonet/cmd"
+)
 
 func main() {
 	cmd.Execute()

@@ -23,13 +23,6 @@ import (
 	"net/url"
 )
 
-var headers map[string]string
-var formVals map[string]string
-var user string
-var password string
-var uRL string
-var method string
-
 // clientCmd represents the client command
 var clientCmd = &cobra.Command{
 	Use:   "client",

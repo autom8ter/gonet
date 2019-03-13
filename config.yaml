@@ -6,4 +6,4 @@ cors:
   allow-headers:
 proxy:
   port: 8080
-  api-prefix: "/"
+  api-prefix: "/v1/echo"

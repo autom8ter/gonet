@@ -2,14 +2,12 @@ package config
 
 import (
 	"encoding/json"
-	"flag"
 	"github.com/autom8ter/goproxyrpc/pkg/errors"
 	"github.com/autom8ter/goproxyrpc/pkg/health"
 	"github.com/autom8ter/util/netutil"
 	"github.com/gorilla/handlers"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"io"
 	"net"
@@ -132,12 +130,7 @@ func SetupViper(envPrefix string) *viper.Viper {
 	viper.AutomaticEnv()
 	viper.SetDefault("proxy.port", 8080)
 	viper.SetDefault("proxy.api-prefix", "/")
-
-	flag.String("endpoint", "", "The gRPC Backend service endpoints to proxy.")
-
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	pflag.Parse()
-	viper.BindPFlags(pflag.CommandLine)
+	viper.SetDefault("endpoint", "http://localhost:3000")
 
 	err := viper.ReadInConfig()
 	if err != nil {
