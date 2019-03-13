@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/autom8ter/gonet/db"
 	"github.com/autom8ter/util"
 	"github.com/autom8ter/util/netutil"
 	"github.com/gorilla/mux"
@@ -24,7 +25,7 @@ type Router struct {
 	addr   string
 	router *mux.Router
 	chain  *negroni.Negroni
-	db     *MongoDB
+	db     *db.MongoDB
 }
 
 func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -49,18 +50,18 @@ func NewMongoRouter(addr, colName, connectionStr, databaseName string) *Router {
 		addr:   addr,
 		router: mux.NewRouter(),
 		chain:  negroni.Classic(),
-		db:     NewMongoDB(colName, connectionStr, databaseName),
+		db:     db.NewMongoDB(colName, connectionStr, databaseName),
 	}
 }
 
-func (r *Router) Mongo() *MongoDB {
+func (r *Router) Mongo() *db.MongoDB {
 	if r.db == nil {
 		panic("Database uninitialized, us NewMongoRouter to add a database connection")
 	}
 	return r.db
 }
 
-func (r *Router) SwitchMongo(m *MongoDB) {
+func (r *Router) SwitchMongo(m *db.MongoDB) {
 	r.db = m
 }
 

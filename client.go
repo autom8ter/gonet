@@ -55,8 +55,8 @@ func (c *Client) AsCsv(s string) ([]string, error) {
 	return util.ReadAsCSV(s)
 }
 
-func (c *Client) WriteTo(w io.Writer) {
-	c.req.Write(w)
+func (c *Client) ToWriter(w io.Writer) error {
+	return c.req.Write(w)
 }
 
 func (c *Client) RequestBasicAuth(userName, password string) {

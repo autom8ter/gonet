@@ -1,4 +1,4 @@
-package gonet
+package db
 
 import (
 	"github.com/autom8ter/util"

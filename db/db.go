@@ -26,7 +26,7 @@ type Person struct {
 }
 */
 
-package gonet
+package db
 
 import (
 	"github.com/go-bongo/bongo"

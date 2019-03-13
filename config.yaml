@@ -1,0 +1,9 @@
+endpoint: "localhost:3000"
+cors:
+  allow-origin:
+  allow-credentials:
+  allow-methods:
+  allow-headers:
+proxy:
+  port: 8080
+  api-prefix: "/"

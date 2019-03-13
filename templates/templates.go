@@ -1,4 +1,4 @@
-package gonet
+package templates
 
 var Auth0UserHTML = `<html>
     <head>
