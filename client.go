@@ -3,44 +3,58 @@ package gonet
 import (
 	"encoding/base64"
 	"github.com/autom8ter/util"
-	"github.com/autom8ter/util/fsutil"
 	"github.com/autom8ter/util/netutil"
 	"github.com/gorilla/sessions"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type Client struct {
 	req *http.Request
-	*http.Client
-	root *cobra.Command
+	cli *http.Client
 }
 
-func NewClient(name, short, long string, u *url.URL, method string) *Client {
+func NewClient(u *url.URL, method string) *Client {
 	var r = &http.Request{
 		URL:    u,
 		Method: method,
 	}
 	return &Client{
-		req:    r,
-		Client: http.DefaultClient,
-		root: &cobra.Command{
-			Use:   name,
-			Short: short,
-			Long:  long,
-		},
+		req: r,
+		cli: http.DefaultClient,
 	}
 }
-
-func (c *Client) SetHeaders(headers map[string]string) {
-	for k, v := range headers {
-		c.req.Header.Set(k, v)
+func NewCustomClient(u *url.URL, method string, client *http.Client) *Client {
+	var r = &http.Request{
+		URL:    u,
+		Method: strings.ToUpper(method),
 	}
+	return &Client{
+		req: r,
+		cli: client,
+	}
+}
+func (c *Client) SetHeaders(headers map[string]string) {
+	c.req = netutil.SetHeaders(headers, c.req)
+}
+
+func (c *Client) SetForm(vals map[string]string) {
+	c.req = netutil.SetForm(vals, c.req)
+}
+
+func (c *Client) SetBasicAuth(userName, password string) {
+	c.req = netutil.SetBasicAuth(userName, password, c.req)
+}
+
+func (c *Client) Client() *http.Client {
+	return c.cli
+}
+
+func (c *Client) Request() *http.Request {
+	return c.req
 }
 
 func (c *Client) Stringify(obj interface{}) string {
@@ -59,75 +73,32 @@ func (c *Client) ToWriter(w io.Writer) error {
 	return c.req.Write(w)
 }
 
-func (c *Client) RequestBasicAuth(userName, password string) {
-	c.req.SetBasicAuth(userName, password)
-}
-
 func (c *Client) Prompt(q string) string {
 	return util.Prompt(q)
 }
 
-func (c *Client) AddCommands(cmds ...*cobra.Command) {
-	c.root.AddCommand(cmds...)
+func (c *Client) SetRequest(req *http.Request) {
+	c.req = req
 }
 
-func (c *Client) AddClients(clients ...*Client) {
-	for _, cmd := range clients {
-		c.root.AddCommand(cmd.root)
-	}
-}
-
-func (c *Client) Execute() error {
-	return c.root.Execute()
-}
-
-func (c *Client) RunFunc(clientFunc ClientFunc) {
-	c.root.Run = func(cmd *cobra.Command, args []string) {
-		cmd = c.root
-		clientFunc(c, args)
-	}
-}
-
-func (c *Client) Debug() {
-	c.root.DebugFlags()
-}
-
-func (c *Client) PersistentFlags() *pflag.FlagSet {
-	return c.root.PersistentFlags()
-}
-
-func (c *Client) Flags() *pflag.FlagSet {
-	return c.root.Flags()
-}
-
-func (c *Client) Version(version string) {
-	c.root.Version = version
-}
-
-func (c *Client) SetOutput(writer io.Writer) {
-	c.root.SetOutput(writer)
-}
-
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	return c.Client.Do(req)
+func (c *Client) Do() (*http.Response, error) {
+	return c.cli.Do(c.req)
 }
 
 func (c *Client) GenerateJWT(signingKey string, claims map[string]interface{}) (string, error) {
 	return util.GenerateJWT(signingKey, claims)
 }
 
-func (c *Client) Init(cfgFile string, envPrefix string, headers map[string]string) {
-	if headers == nil {
-		headers = make(map[string]string)
+func (c *Client) Init(headers map[string]string, formvals map[string]string, user, password string) {
+	if headers != nil {
+		c.SetHeaders(headers)
 	}
-	c.root.PersistentFlags().StringVarP(&cfgFile, "config", "c", "config.yaml", "relative path to config file")
-	c.root.PersistentFlags().StringToStringVar(&headers, "headers", nil, "request headers")
-	if viper.ConfigFileUsed() == "" {
-		fsutil.InitConfig(cfgFile, envPrefix)
+	if formvals != nil {
+		c.SetForm(formvals)
 	}
-	viper.BindPFlags(c.root.PersistentFlags())
-	viper.BindPFlags(c.root.Flags())
-	c.SetHeaders(headers)
+	if user != "" && password != "" {
+		c.SetBasicAuth(user, password)
+	}
 }
 
 func (r *Client) Render(s string, data interface{}) string {
@@ -141,8 +112,6 @@ func (r *Client) NewSessionFSStore() *sessions.FilesystemStore {
 func (r *Client) NewSessionCookieStore() *sessions.CookieStore {
 	return netutil.NewSessionCookieStore()
 }
-
-type ClientFunc func(c *Client, args []string)
 
 func (r *Client) RandomTokenString(length int) string {
 	b := make([]byte, length)
@@ -162,4 +131,8 @@ func (r *Client) DerivePassword(counter uint32, password_type, password, user, s
 
 func (r *Client) GeneratePrivateKey(typ string) string {
 	return util.GeneratePrivateKey(typ)
+}
+
+func (r *Client) ReadBody(resp *http.Response) ([]byte, error) {
+	return netutil.ReadBody(resp)
 }

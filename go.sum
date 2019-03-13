@@ -37,6 +37,10 @@ github.com/autom8ter/util v0.0.0-20190313082903-0c0f3513d0fd h1:HcQkadopW+jscWrR
 github.com/autom8ter/util v0.0.0-20190313082903-0c0f3513d0fd/go.mod h1:yBIBfSOvXm/fp2plKI0AsctBBOYj7At66rFrQUpB3/Q=
 github.com/autom8ter/util v0.0.0-20190313202529-36842d9892a3 h1:WY0hYpFdI/I+yEj7B4e+KTnfRIl5z6eLMdxvaS3s9sE=
 github.com/autom8ter/util v0.0.0-20190313202529-36842d9892a3/go.mod h1:MzWHgBJlog42W2oOUIpONBPR59bj8ZLfKvHrUHo67qA=
+github.com/autom8ter/util v0.0.0-20190313210927-ac6078c870c3 h1:u2mFxJBKFJhSIzPOeOsiiW8P+WOuapn6/qW8nPnA9Us=
+github.com/autom8ter/util v0.0.0-20190313210927-ac6078c870c3/go.mod h1:MzWHgBJlog42W2oOUIpONBPR59bj8ZLfKvHrUHo67qA=
+github.com/autom8ter/util v0.0.0-20190313214336-af0878be9750 h1:UptLULJr7YAsczMbyH5+kGEsddWKeLwOJv0FaFw6ZFk=
+github.com/autom8ter/util v0.0.0-20190313214336-af0878be9750/go.mod h1:MzWHgBJlog42W2oOUIpONBPR59bj8ZLfKvHrUHo67qA=
 github.com/aws/aws-lambda-go v1.8.2/go.mod h1:zUsUQhAUjYzR8AuduJPCfhBuKWUaDbQiPOG+ouzmE1A=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 h1:xJ4a3vCFaGF/jqvzLMYoU8P317H5OQ+Via4RmuPwCS0=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -112,6 +116,7 @@ github.com/julienschmidt/httprouter v1.2.0/go.mod h1:SYymIcj16QtmaHHD7aYtjjsJG7V
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
 github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQLJ+jE2L00=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
+github.com/konsorten/go-windows-terminal-sequences v1.0.1 h1:mweAR1A6xJ3oS2pRaGiHgQ4OO8tzTaLawm8vnODuwDk=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
