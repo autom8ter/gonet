@@ -6,9 +6,9 @@ import (
 	"github.com/autom8ter/util/netutil"
 	"github.com/gorilla/sessions"
 	"io"
+	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -17,32 +17,26 @@ type Client struct {
 	cli *http.Client
 }
 
-func NewClient(u *url.URL, method string) *Client {
-	var r = &http.Request{
-		URL:    u,
-		Method: method,
+func NewClient(urL, method, user, password, body string, headers map[string]string, form map[string]string) *Client {
+	var r, err = netutil.NewRequest(method, urL, user, password, headers, form, strings.NewReader(body))
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 	return &Client{
 		req: r,
 		cli: http.DefaultClient,
 	}
 }
-func NewCustomClient(u *url.URL, method string, client *http.Client) *Client {
-	var r = &http.Request{
-		URL:    u,
-		Method: strings.ToUpper(method),
+
+func NewCustomClient(urL, method, user, password, body string, headers map[string]string, form map[string]string, client *http.Client) *Client {
+	var r, err = netutil.NewRequest(method, urL, user, password, headers, form, strings.NewReader(body))
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 	return &Client{
 		req: r,
 		cli: client,
 	}
-}
-func (c *Client) SetHeaders(headers map[string]string) {
-	c.req = netutil.SetHeaders(headers, c.req)
-}
-
-func (c *Client) SetForm(vals map[string]string) {
-	c.req = netutil.SetForm(vals, c.req)
 }
 
 func (c *Client) SetBasicAuth(userName, password string) {
@@ -87,18 +81,6 @@ func (c *Client) Do() (*http.Response, error) {
 
 func (c *Client) GenerateJWT(signingKey string, claims map[string]interface{}) (string, error) {
 	return util.GenerateJWT(signingKey, claims)
-}
-
-func (c *Client) Init(headers map[string]string, formvals map[string]string, user, password string) {
-	if headers != nil {
-		c.SetHeaders(headers)
-	}
-	if formvals != nil {
-		c.SetForm(formvals)
-	}
-	if user != "" && password != "" {
-		c.SetBasicAuth(user, password)
-	}
 }
 
 func (r *Client) Render(s string, data interface{}) string {

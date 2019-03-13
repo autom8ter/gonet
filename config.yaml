@@ -7,3 +7,4 @@ cors:
 proxy:
   port: 8080
   api-prefix: "/v1/echo"
+say: "hello there"

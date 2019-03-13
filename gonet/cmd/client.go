@@ -20,7 +20,6 @@ import (
 	"github.com/autom8ter/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"net/url"
 )
 
 // clientCmd represents the client command
@@ -28,10 +27,7 @@ var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "gonet client cli",
 	Run: func(cmd *cobra.Command, args []string) {
-		tuRL, err := url.Parse(uRL)
-		util.NewErrCfg("parse request target url", err).FailIfErr()
-		client := gonet.NewClient(tuRL, method)
-		client.Init(headers, formVals, user, password)
+		client := gonet.NewClient(uRL, method, user, password, body, headers, formVals)
 		resp, err := client.Do()
 		util.NewErrCfg("client do", err).FailIfErr()
 		body, err := client.ReadBody(resp)
@@ -41,12 +37,14 @@ var clientCmd = &cobra.Command{
 }
 
 func init() {
-	clientCmd.LocalFlags().StringVar(&uRL, "url", "https://raw.githubusercontent.com/autom8ter/static-json/master/fruit.json", "request target url")
-	clientCmd.LocalFlags().StringVar(&method, "method", "get", "request method")
+	clientCmd.LocalFlags().StringVar(&uRL, "url", "http://localhost:8080/v1/echo", "request target url")
+	clientCmd.LocalFlags().StringVar(&method, "method", "post", "request method")
 	clientCmd.LocalFlags().StringToStringVar(&headers, "headers", nil, "request headers")
 	clientCmd.LocalFlags().StringToStringVar(&formVals, "form", nil, "request form values")
 	clientCmd.LocalFlags().StringVar(&user, "user", "", "request username")
 	clientCmd.LocalFlags().StringVar(&password, "pass", "", "request password")
+	clientCmd.LocalFlags().StringVar(&body, "body", `{"say": "hello there"}`, "request body")
+
 	_ = viper.BindPFlags(clientCmd.LocalFlags())
 
 }

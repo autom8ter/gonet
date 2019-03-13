@@ -3,15 +3,13 @@ package gonet
 import (
 	"fmt"
 	"github.com/autom8ter/gonet/config"
-	"github.com/gorilla/handlers"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	_ "google.golang.org/genproto/googleapis/rpc/errdetails" // Pull in errdetails
 	"google.golang.org/grpc"
-	"net/http"
-	"os"
+	"strings"
 )
 
 type GrpcGateway struct {
@@ -46,7 +44,7 @@ func NewGrpcGateway(ctx context.Context, cfg *GrpcGatewayConfig, r *Router) *Grp
 	}
 	fmt.Printf("registered grpc endpoint:  %s\n", c.Endpoint)
 	fmt.Printf("registered gateway handler:  %s\n", c.ApiPrefix)
-	r.Mux().Handle(c.ApiPrefix, handlers.CustomLoggingHandler(os.Stdout, http.StripPrefix(c.ApiPrefix[:len(c.ApiPrefix)-1], config.AllowCors(c, gw)), config.LogFormatter(c)))
+	r.Mux().Handle(c.ApiPrefix, gw).Methods("POST").Name(strings.TrimLeft(c.ApiPrefix, "/"))
 
 	return &GrpcGateway{
 		Router: r,

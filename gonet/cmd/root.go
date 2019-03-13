@@ -21,7 +21,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cfgFile string
 var addr string
 var headers map[string]string
 var formVals map[string]string
@@ -29,6 +28,7 @@ var user string
 var password string
 var uRL string
 var method string
+var body string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -56,6 +56,5 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "config.yaml", "config file")
 	rootCmd.AddCommand(clientCmd, proxyCmd, grpcCmd, routerCmd)
 }
