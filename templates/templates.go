@@ -32,3 +32,27 @@ var GoogleLoginButton = `<html>
 	<a href="/login">Google Log In</a>
 </body>
 </html>`
+
+var EmailTmpl = `To: {{namedAddresses .Mail.ToNames .Mail.To}}{{if .Mail.Cc}}
+Cc: {{namedAddresses .Mail.CcNames .Mail.Cc}}{{end}}{{if .Mail.Bcc}}
+Bcc: {{namedAddresses .Mail.BccNames .Mail.Bcc}}{{end}}
+From: {{namedAddress .Mail.FromName .Mail.From}}
+Subject: {{.Mail.Subject}}{{if .Mail.ReplyTo}}
+Reply-To: {{namedAddress .Mail.ReplyToName .Mail.ReplyTo}}{{end}}
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==============={{.Boundary}}=="
+Content-Transfer-Encoding: 7bit
+{{if .Mail.TextBody -}}
+--==============={{.Boundary}}==
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+{{.Mail.TextBody}}
+{{end -}}
+{{if .Mail.HTMLBody -}}
+--==============={{.Boundary}}==
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+{{.Mail.HTMLBody}}
+{{end -}}
+--==============={{.Boundary}}==--
+`

@@ -1,7 +1,7 @@
 package gonet
 
 import (
-	"github.com/autom8ter/util/netutil"
+	"github.com/autom8ter/util"
 	"net/http"
 	"net/http/httputil"
 )
@@ -40,11 +40,11 @@ func NewReverseProxy(addr string, configs ...*ProxyConfig) *ReverseProxy {
 	}
 	for _, c := range configs {
 		g.proxies[c.PathPrefix] = &httputil.ReverseProxy{
-			Director: netutil.ProxyRequestFunc(c.TargetUrl, c.Method, c.Username, c.Password, c.Headers, c.Form),
+			Director: util.ProxyRequestFunc(c.TargetUrl, c.Method, c.Username, c.Password, c.Headers, c.Form),
 		}
 	}
 	for path, prox := range g.proxies {
-		g.Mux().Handle(path, prox)
+		g.Router.Router().Handle(path, prox)
 	}
 	return g
 }

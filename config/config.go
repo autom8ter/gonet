@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"github.com/autom8ter/goproxyrpc/pkg/errors"
 	"github.com/autom8ter/goproxyrpc/pkg/health"
-	"github.com/autom8ter/util/netutil"
+	"github.com/autom8ter/util"
 	"github.com/gorilla/handlers"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"io"
@@ -121,6 +120,7 @@ func LogFormatter(cfg *ProxyConfig) handlers.LogFormatter {
 
 // SetupViper returns a viper configuration object
 func SetupViper(envPrefix string) *viper.Viper {
+	util.DotEnv()
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	if envPrefix != "" {
@@ -138,18 +138,11 @@ func SetupViper(envPrefix string) *viper.Viper {
 	}
 	endPoint := viper.GetString("endpoint")
 	if viper.InConfig("proxy.api-prefix") {
-		viper.Set("proxy.api-prefix", netutil.SanitizeApiPrefix(viper.GetString("proxy.api-prefix")))
+		viper.Set("proxy.api-prefix", util.SanitizeApiPrefix(viper.GetString("proxy.api-prefix")))
 	}
 	if endPoint == "" {
 		errors.New("", errors.NewErr("please provide a non-empty endpoint in your configuration")).FailIfErr()
 	}
 	errors.New("failed to ping grpc endpoint", health.New(endPoint).Once().Do()).FailIfErr()
 	return viper.GetViper()
-}
-
-func SetupGateway() *runtime.ServeMux {
-	return runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(netutil.IncomingHeaderMatcher),
-		runtime.WithOutgoingHeaderMatcher(netutil.OutgoingHeaderMatcher),
-	)
 }

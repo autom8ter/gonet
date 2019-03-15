@@ -1,10 +1,9 @@
 package gonet
 
 import (
+	"context"
 	"encoding/base64"
 	"github.com/autom8ter/util"
-	"github.com/autom8ter/util/netutil"
-	"github.com/gorilla/sessions"
 	"io"
 	"log"
 	"math/rand"
@@ -17,8 +16,8 @@ type Client struct {
 	cli *http.Client
 }
 
-func NewClient(urL, method, user, password, body string, headers map[string]string, form map[string]string) *Client {
-	var r, err = netutil.NewRequest(method, urL, user, password, headers, form, strings.NewReader(body))
+func NewClient(ctx context.Context, urL, method, user, password, body string, headers map[string]string, form map[string]string) *Client {
+	var r, err = util.NewRequestCtx(ctx, method, urL, user, password, headers, form, strings.NewReader(body))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -28,19 +27,8 @@ func NewClient(urL, method, user, password, body string, headers map[string]stri
 	}
 }
 
-func NewCustomClient(urL, method, user, password, body string, headers map[string]string, form map[string]string, client *http.Client) *Client {
-	var r, err = netutil.NewRequest(method, urL, user, password, headers, form, strings.NewReader(body))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	return &Client{
-		req: r,
-		cli: client,
-	}
-}
-
-func (c *Client) SetBasicAuth(userName, password string) {
-	c.req = netutil.SetBasicAuth(userName, password, c.req)
+func (c *Client) WithClient(client *http.Client) {
+	c.cli = client
 }
 
 func (c *Client) Client() *http.Client {
@@ -87,14 +75,6 @@ func (r *Client) Render(s string, data interface{}) string {
 	return util.Render(s, data)
 }
 
-func (r *Client) NewSessionFSStore() *sessions.FilesystemStore {
-	return netutil.NewSessionFileStore()
-}
-
-func (r *Client) NewSessionCookieStore() *sessions.CookieStore {
-	return netutil.NewSessionCookieStore()
-}
-
 func (r *Client) RandomTokenString(length int) string {
 	b := make([]byte, length)
 	rand.Read(b)
@@ -116,5 +96,5 @@ func (r *Client) GeneratePrivateKey(typ string) string {
 }
 
 func (r *Client) ReadBody(resp *http.Response) ([]byte, error) {
-	return netutil.ReadBody(resp)
+	return util.ReadBody(resp)
 }

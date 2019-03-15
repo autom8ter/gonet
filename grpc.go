@@ -3,6 +3,7 @@ package gonet
 import (
 	"fmt"
 	"github.com/autom8ter/gonet/config"
+	"github.com/autom8ter/gonet/netutil"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -38,13 +39,13 @@ func NewGrpcGateway(ctx context.Context, cfg *GrpcGatewayConfig, r *Router) *Grp
 		CorsAllowHeaders:     v.GetString("cors.allow-headers"),
 		ApiPrefix:            v.GetString("proxy.api-prefix"),
 	}
-	gw := config.SetupGateway()
+	gw := netutil.SetupGateway()
 	if err := cfg.RegisterFunc(ctx, gw, c.Endpoint, cfg.DialOptions); err != nil {
 		logrus.Fatalf("failed to register grpc gateway from endpoint: %s", err.Error())
 	}
 	fmt.Printf("registered grpc endpoint:  %s\n", c.Endpoint)
 	fmt.Printf("registered gateway handler:  %s\n", c.ApiPrefix)
-	r.Mux().Handle(c.ApiPrefix, gw).Methods("POST").Name(strings.TrimLeft(c.ApiPrefix, "/"))
+	r.Router().Handle(c.ApiPrefix, gw).Methods("POST").Name(strings.TrimLeft(c.ApiPrefix, "/"))
 
 	return &GrpcGateway{
 		Router: r,

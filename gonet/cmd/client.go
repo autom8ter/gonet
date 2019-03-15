@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/autom8ter/gonet"
 	"github.com/autom8ter/util"
@@ -27,7 +28,7 @@ var clientCmd = &cobra.Command{
 	Use:   "client",
 	Short: "gonet client cli",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := gonet.NewClient(uRL, method, user, password, body, headers, formVals)
+		client := gonet.NewClient(context.Background(), uRL, method, user, password, body, headers, formVals)
 		resp, err := client.Do()
 		util.NewErrCfg("client do", err).FailIfErr()
 		body, err := client.ReadBody(resp)
