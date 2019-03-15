@@ -2,11 +2,11 @@ module github.com/autom8ter/gonet
 
 require (
 	github.com/auth0-community/go-auth0 v1.0.0 // indirect
-	github.com/autom8ter/authzero v0.0.0-20190315093738-f0c57bb23435
+	github.com/autom8ter/authzero v0.0.0-20190315093738-f0c57bb23435 // indirect
 	github.com/autom8ter/goproxy v0.0.0-20190306215635-39730c12aad3 // indirect
 	github.com/autom8ter/goproxyrpc v0.0.0-20190307203310-76cf9f18149e
 	github.com/autom8ter/source v0.0.0-20190313063806-9ddad499cd07 // indirect
-	github.com/autom8ter/util v0.0.0-20190315123441-76ea5ef8b80f
+	github.com/autom8ter/util v0.0.0-20190315143019-1ab48ff7769b
 	github.com/go-bongo/bongo v0.10.4
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.2.1
@@ -19,10 +19,8 @@ require (
 	github.com/oleiade/reflections v1.0.0 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/prometheus/client_golang v0.9.2
-	github.com/rs/cors v1.6.0
 	github.com/sirupsen/logrus v1.4.0
 	github.com/soheilhy/cmux v0.1.4
-	github.com/spf13/afero v1.1.2
 	github.com/spf13/viper v1.3.1
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/net v0.0.0-20190310074541-c10a0554eabf

@@ -186,3 +186,21 @@ func (r Router) Handler(fns ...router.RouterFunc) http.Handler {
 	n.UseHandler(m)
 	return n
 }
+
+type Runner struct {
+	Addr    string
+	Routers []func(router Router)
+	Muxers  []router.RouterFunc
+}
+
+func NewRunner(addr string, routers []func(router Router), muxers []router.RouterFunc) *Runner {
+	return &Runner{Addr: addr, Routers: routers, Muxers: muxers}
+}
+
+func (r *Runner) Run() error {
+	var rmux = Router{}
+	for _, f := range r.Routers {
+		f(rmux)
+	}
+	return http.ListenAndServe(r.Addr, rmux.Handler(r.Muxers...))
+}
