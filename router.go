@@ -1,17 +1,14 @@
 package gonet
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
-	"github.com/auth0/go-jwt-middleware"
 	"github.com/autom8ter/gonet/db"
 	"github.com/autom8ter/util"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/cors"
 	"github.com/spf13/afero"
 	"github.com/spf13/viper"
 	"github.com/urfave/negroni"
@@ -32,6 +29,7 @@ type Router struct {
 	router *mux.Router
 	chain  *negroni.Negroni
 	db     *db.MongoDB
+	cORS   *cors.Cors
 }
 
 func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
@@ -62,7 +60,7 @@ func NewMongoRouter(addr, colName, connectionStr, databaseName string) *Router {
 
 func (r *Router) Mongo() *db.MongoDB {
 	if r.db == nil {
-		panic("Database uninitialized, us NewMongoRouter to add a database connection")
+		panic("Database uninitialized, use NewMongoRouter to add a database connection")
 	}
 	return r.db
 }
@@ -93,13 +91,10 @@ func (r *Router) WithMetrics() {
 	WithMetrics(r.router)
 }
 
-func (r *Router) WithJWT(signingKey string, debug bool, path string, handler http.Handler) {
-	WithJWT(signingKey, debug, path, handler, r.router)
-}
-
-func (r *Router) Serve() {
+func (r *Router) ListenAndServe() error {
 	r.chain.UseHandler(r.router)
-	r.chain.Run(r.addr)
+	fmt.Println(fmt.Sprintf("[GoNet] starting http server on: %s", r.addr))
+	return http.ListenAndServe(r.addr, r.chain)
 }
 
 func (r *Router) NotImplememntedFunc() http.HandlerFunc {
@@ -134,15 +129,6 @@ func (r *Router) DelHeader(key string, w http.ResponseWriter) {
 	w.Header().Del(key)
 }
 
-func (r *Router) Do(r2 *http.Request) (*http.Response, error) {
-	client := http.DefaultClient
-	return client.Do(r2)
-}
-
-func (r *Router) DoClient(r2 *http.Request, client *http.Client) (*http.Response, error) {
-	return client.Do(r2)
-}
-
 func (r *Router) Stringify(obj interface{}) string {
 	return util.ToPrettyJsonString(obj)
 }
@@ -151,47 +137,15 @@ func (r *Router) JSONify(obj interface{}) []byte {
 	return util.ToPrettyJson(obj)
 }
 
-func (r *Router) RandomTokenString(length int) string {
-	b := make([]byte, length)
-	rand.Read(b)
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func (r *Router) RandomToken(length int) []byte {
-	b := make([]byte, length)
-	rand.Read(b)
-	return b
-}
-
-func (r *Router) DerivePassword(counter uint32, password_type, password, user, site string) string {
-	return util.DerivePassword(counter, password, password, user, site)
-}
-
-func (r *Router) GeneratePrivateKey(typ string) string {
-	return util.GeneratePrivateKey(typ)
-}
-
 func (r *Router) Render(s string, data interface{}) string {
 	return util.Render(s, data)
-}
-
-func (r *Router) SetSessionValFunc(cookieStore *sessions.CookieStore, name string, vals map[string]interface{}) http.HandlerFunc {
-	return SetSessionValFunc(cookieStore, name, vals)
-}
-
-func (r *Router) NewSessionFSStore(path, key string) *sessions.FilesystemStore {
-	return NewSessionFileStore(path, key)
 }
 
 func (r *Router) NewSessionCookieStore(key string) *sessions.CookieStore {
 	return NewSessionCookieStore(key)
 }
 
-func (r *Router) AddFlashSessionFunc(cookieStore *sessions.CookieStore, name string, val interface{}, vars ...string) http.HandlerFunc {
-	return AddFlashSessionFunc(cookieStore, name, val, vars...)
-}
-
-func (r *Router) Router() *mux.Router {
+func (r *Router) Mux() *mux.Router {
 	if r.router == nil {
 		return mux.NewRouter()
 	}
@@ -205,37 +159,21 @@ func (r *Router) HTTPFS() *afero.HttpFs {
 	return r.fs
 }
 
-func (r *Router) RequestVars(req *http.Request) map[string]string {
-	return RequestVars(req)
+type CorsConfig struct {
+	Origins, Methods, Headers []string
+	Creds, Options, Debug     bool
+	MaxAge                    int
 }
 
-func JWTMiddleware(singingKey string, debug bool) *jwtmiddleware.JWTMiddleware {
-	return jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return singingKey, nil
-		},
-		Debug:         debug,
-		SigningMethod: jwt.SigningMethodHS256,
-	})
+func (r *Router) SetCors(cfg *CorsConfig) {
+	r.cORS = util.NewCors(cfg.Origins, cfg.Methods, cfg.Headers, cfg.Creds, cfg.Options, cfg.Debug, cfg.MaxAge)
 }
 
-func WithJWT(signingKey string, debug bool, path string, handler http.Handler, r *mux.Router) {
-
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte(signingKey), nil
-		},
-		Debug: debug,
-		Extractor: jwtmiddleware.FromFirst(jwtmiddleware.FromAuthHeader,
-			jwtmiddleware.FromParameter("code"),
-			jwtmiddleware.FromParameter("auth-code")),
-		SigningMethod: jwt.SigningMethodHS256,
-	})
-
-	r.Handle(path, negroni.New(
-		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
-		negroni.Wrap(handler),
-	))
+func (r *Router) WrapCors(handler http.Handler) http.Handler {
+	if r.cORS == nil {
+		r.cORS = cors.AllowAll()
+	}
+	return r.cORS.Handler(handler)
 }
 
 func WithDebug(r *mux.Router) {
@@ -355,8 +293,4 @@ func WithMetrics(r *mux.Router) {
 	})
 	fmt.Println("registered handler: ", "/metrics")
 	r.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-}
-
-func RequestVars(req *http.Request) map[string]string {
-	return mux.Vars(req)
 }
