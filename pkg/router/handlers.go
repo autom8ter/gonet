@@ -1,180 +1,23 @@
-package gonet
+package router
 
 import (
-	"context"
 	"fmt"
-	"github.com/autom8ter/gonet/db"
 	"github.com/autom8ter/util"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/cors"
-	"github.com/spf13/afero"
 	"github.com/spf13/viper"
-	"github.com/urfave/negroni"
 	"net/http"
 	"net/http/pprof"
 	"os"
 )
 
-func init() {
-	fs = afero.NewOsFs()
-}
+type RouterFunc func(router *mux.Router)
 
-var fs afero.Fs
-
-type Router struct {
-	fs     *afero.HttpFs
-	addr   string
-	router *mux.Router
-	chain  *negroni.Negroni
-	db     *db.MongoDB
-	cORS   *cors.Cors
-}
-
-func (r *Router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	r.router.ServeHTTP(rw, req)
-}
-
-func NewRouter(addr string) *Router {
-	m := mux.NewRouter()
-	n := negroni.Classic()
-	httpFs := afero.NewHttpFs(fs)
-	return &Router{
-		fs:     httpFs,
-		addr:   addr,
-		router: m,
-		db:     nil,
-		chain:  n,
-	}
-}
-
-func NewMongoRouter(addr, colName, connectionStr, databaseName string) *Router {
-	return &Router{
-		addr:   addr,
-		router: mux.NewRouter(),
-		chain:  negroni.Classic(),
-		db:     db.NewMongoDB(colName, connectionStr, databaseName),
-	}
-}
-
-func (r *Router) Mongo() *db.MongoDB {
-	if r.db == nil {
-		panic("Database uninitialized, use NewMongoRouter to add a database connection")
-	}
-	return r.db
-}
-
-func (r *Router) SwitchMongo(m *db.MongoDB) {
-	r.db = m
-}
-
-func (r *Router) SwitchNegroni(n *negroni.Negroni) {
-	r.chain = n
-}
-func (r *Router) SwitchAddr(a string) {
-	r.addr = a
-}
-func (r *Router) SwitchRouter(router *mux.Router) {
-	r.router = router
-}
-
-func (r *Router) WithDebug() {
-	WithDebug(r.router)
-}
-
-func (r *Router) WithStaticViews() {
-	WithStaticViews(r.router)
-}
-
-func (r *Router) WithMetrics() {
-	WithMetrics(r.router)
-}
-
-func (r *Router) ListenAndServe() error {
-	r.chain.UseHandler(r.router)
-	fmt.Println(fmt.Sprintf("[GoNet] starting http server on: %s", r.addr))
-	return http.ListenAndServe(r.addr, r.chain)
-}
-
-func (r *Router) NotImplememntedFunc() http.HandlerFunc {
+func NotImplementedFunc() http.HandlerFunc {
 	return func(w http.ResponseWriter, request *http.Request) {
 		w.Write([]byte("Not Implemented"))
 	}
-}
-
-func (r *Router) OnErrorUnauthorized(w http.ResponseWriter, req *http.Request, err string) {
-	http.Error(w, err, http.StatusUnauthorized)
-}
-
-func (r *Router) OnErrorInternal(w http.ResponseWriter, req *http.Request, err string) {
-	http.Error(w, err, http.StatusInternalServerError)
-}
-
-func (r *Router) GenerateJWT(signingKey string, claims map[string]interface{}) (string, error) {
-	return util.GenerateJWT(signingKey, claims)
-}
-
-func (r *Router) SetResponseHeaders(headers map[string]string, w http.ResponseWriter) {
-	for k, v := range headers {
-		w.Header().Set(k, v)
-	}
-}
-
-func (r *Router) GetHeader(key string, w http.ResponseWriter) string {
-	return w.Header().Get(key)
-}
-
-func (r *Router) DelHeader(key string, w http.ResponseWriter) {
-	w.Header().Del(key)
-}
-
-func (r *Router) Stringify(obj interface{}) string {
-	return util.ToPrettyJsonString(obj)
-}
-
-func (r *Router) JSONify(obj interface{}) []byte {
-	return util.ToPrettyJson(obj)
-}
-
-func (r *Router) Render(s string, data interface{}) string {
-	return util.Render(s, data)
-}
-
-func (r *Router) NewSessionCookieStore(key string) *sessions.CookieStore {
-	return NewSessionCookieStore(key)
-}
-
-func (r *Router) Mux() *mux.Router {
-	if r.router == nil {
-		return mux.NewRouter()
-	}
-	return r.router
-}
-
-func (r *Router) HTTPFS() *afero.HttpFs {
-	if r.fs == nil {
-		return afero.NewHttpFs(fs)
-	}
-	return r.fs
-}
-
-type CorsConfig struct {
-	Origins, Methods, Headers []string
-	Creds, Options, Debug     bool
-	MaxAge                    int
-}
-
-func (r *Router) SetCors(cfg *CorsConfig) {
-	r.cORS = util.NewCors(cfg.Origins, cfg.Methods, cfg.Headers, cfg.Creds, cfg.Options, cfg.Debug, cfg.MaxAge)
-}
-
-func (r *Router) WrapCors(handler http.Handler) http.Handler {
-	if r.cORS == nil {
-		r.cORS = cors.AllowAll()
-	}
-	return r.cORS.Handler(handler)
 }
 
 func WithDebug(r *mux.Router) {
@@ -294,27 +137,4 @@ func WithMetrics(r *mux.Router) {
 	})
 	fmt.Println("registered handler: ", "/metrics")
 	r.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-}
-
-func ExecHandler(ctx context.Context, name, dir  string, args ...string) http.HandlerFunc {
-	type Command struct {
-		Name string `json:"name"`
-		Dir string `json:"dir"`
-		Args []string `json:"args"`
-		Output []byte `json:"output"`
-	}
-	var cmd = &Command{
-		Name:   name,
-		Dir:    dir,
-		Args:   args,
-	}
-	return func(w http.ResponseWriter, r *http.Request) {
-		bits, err := util.Exec(ctx, name, dir, args)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		cmd.Output = bits
-		w.Write(util.ToPrettyJson(cmd))
-	}
 }
