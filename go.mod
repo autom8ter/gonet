@@ -26,6 +26,7 @@ require (
 	github.com/spf13/viper v1.3.1
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/net v0.0.0-20190310074541-c10a0554eabf
+	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421
 	google.golang.org/genproto v0.0.0-20180831171423-11092d34479b
 	google.golang.org/grpc v1.19.0
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce

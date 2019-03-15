@@ -6,8 +6,10 @@ import (
 	"github.com/autom8ter/goproxyrpc/pkg/health"
 	"github.com/autom8ter/util"
 	"github.com/gorilla/handlers"
+	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
 	"io"
 	"net"
 	"net/http"
@@ -145,4 +147,15 @@ func SetupViper(envPrefix string) *viper.Viper {
 	}
 	errors.New("failed to ping grpc endpoint", health.New(endPoint).Once().Do()).FailIfErr()
 	return viper.GetViper()
+}
+
+type Auth0Config struct {
+	Domain       string   `json:"domain"`
+	Audience     string   `json:"audience"`
+	Callback     string   `json:"callback"`
+	Scopes       []string `json:"scopes"`
+	ClientID     string   `json:"client_id"`
+	ClientSecret string   `json:"client_secret"`
+	cfg          *oauth2.Config
+	Cookies      *sessions.CookieStore
 }

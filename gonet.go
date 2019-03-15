@@ -50,6 +50,10 @@ func (h HandlerFunc) Chain(chained ...http.HandlerFunc) HandlerFunc {
 	}
 }
 
+func AsHandlerFunc(handlerFunc http.HandlerFunc) HandlerFunc {
+	return HandlerFunc(handlerFunc)
+}
+
 type GRPCRouter func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error)
 
 func (g GRPCRouter) Handler(ctx context.Context, cfg *config.ProxyConfig, opts []grpc.DialOption, fns ...router.RouterFunc) http.Handler {
