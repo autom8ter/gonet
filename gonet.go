@@ -179,6 +179,7 @@ func (r Router) Handler(fns ...router.RouterFunc) http.Handler {
 		f(m)
 	}
 	for path, f := range r {
+		logrus.Debugln("registered handler: ", path)
 		m.HandleFunc(path, f)
 	}
 	n := negroni.Classic()
