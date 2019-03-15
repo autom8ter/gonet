@@ -45,7 +45,7 @@ func NewGrpcGateway(ctx context.Context, cfg *GrpcGatewayConfig, r *Router) *Grp
 	}
 	fmt.Printf("registered grpc endpoint:  %s\n", c.Endpoint)
 	fmt.Printf("registered gateway handler:  %s\n", c.ApiPrefix)
-	r.Router().Handle(c.ApiPrefix, gw).Methods("POST").Name(strings.TrimLeft(c.ApiPrefix, "/"))
+	r.Mux().Handle(c.ApiPrefix, gw).Methods("POST").Name(strings.TrimLeft(c.ApiPrefix, "/"))
 
 	return &GrpcGateway{
 		Router: r,

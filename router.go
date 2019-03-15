@@ -1,6 +1,7 @@
 package gonet
 
 import (
+	"context"
 	"fmt"
 	"github.com/autom8ter/gonet/db"
 	"github.com/autom8ter/util"
@@ -293,4 +294,27 @@ func WithMetrics(r *mux.Router) {
 	})
 	fmt.Println("registered handler: ", "/metrics")
 	r.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
+}
+
+func ExecHandler(ctx context.Context, name, dir  string, args ...string) http.HandlerFunc {
+	type Command struct {
+		Name string `json:"name"`
+		Dir string `json:"dir"`
+		Args []string `json:"args"`
+		Output []byte `json:"output"`
+	}
+	var cmd = &Command{
+		Name:   name,
+		Dir:    dir,
+		Args:   args,
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		bits, err := util.Exec(ctx, name, dir, args)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		cmd.Output = bits
+		w.Write(util.ToPrettyJson(cmd))
+	}
 }
