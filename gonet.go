@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 )
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request)
@@ -49,6 +50,28 @@ func (h HandlerFunc) Chain(chained ...http.HandlerFunc) HandlerFunc {
 		}
 	}
 }
+
+func (h HandlerFunc) SwitchGRPC(grpcServer *grpc.Server) HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			h.ServeHTTP(w, r)
+		}
+	}
+}
+
+func (h HandlerFunc) SwitchJSON(handler http.HandlerFunc) HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "json") {
+			handler.ServeHTTP(w, r)
+		} else {
+			h.ServeHTTP(w, r)
+		}
+	}
+}
+
+
 
 func AsHandlerFunc(handlerFunc http.HandlerFunc) HandlerFunc {
 	return HandlerFunc(handlerFunc)
