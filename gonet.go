@@ -227,3 +227,9 @@ func (r *Runner) Run() error {
 	}
 	return http.ListenAndServe(r.Addr, rmux.Handler(r.Muxers...))
 }
+
+func GrpcAsHandlerFunc(s *grpc.Server) HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s.ServeHTTP(w, r)
+	}
+}
