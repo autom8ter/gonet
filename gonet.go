@@ -71,8 +71,6 @@ func (h HandlerFunc) SwitchJSON(handler http.HandlerFunc) HandlerFunc {
 	}
 }
 
-
-
 func AsHandlerFunc(handlerFunc http.HandlerFunc) HandlerFunc {
 	return HandlerFunc(handlerFunc)
 }
@@ -210,24 +208,9 @@ func (r Router) Handler(fns ...router.RouterFunc) http.Handler {
 	return n
 }
 
-type Runner struct {
-	Addr    string
-	Routers []func(router Router)
-	Muxers  []router.RouterFunc
+func (r Router) ListenAndServe(addr string, fns ...router.RouterFunc) error {
+	return http.ListenAndServe(addr, r.Handler(fns...))
 }
-
-func NewRunner(addr string, routers []func(router Router), muxers []router.RouterFunc) *Runner {
-	return &Runner{Addr: addr, Routers: routers, Muxers: muxers}
-}
-
-func (r *Runner) Run() error {
-	var rmux = Router{}
-	for _, f := range r.Routers {
-		f(rmux)
-	}
-	return http.ListenAndServe(r.Addr, rmux.Handler(r.Muxers...))
-}
-
 func GrpcAsHandlerFunc(s *grpc.Server) HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.ServeHTTP(w, r)
